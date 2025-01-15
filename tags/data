@@ -1,0 +1,9 @@
+{
+  "tag1": "tag1-value",
+  "tag2": {
+    "value1": "value1-value",
+    "value2": "value2-value",
+    "value3": "value3-value"
+  },
+  "tag3": "tag3-value"
+}

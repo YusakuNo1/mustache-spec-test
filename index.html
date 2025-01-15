@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Mustache Example</title>
+</head>
+
+<body>
+  <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/4.2.0/mustache.js"></script>
+  <script type="module">
+    import Mustache from "https://cdnjs.cloudflare.com/ajax/libs/mustache.js/4.2.0/mustache.js"
+
+    // Spec: https://mustache.github.io/mustache.5.html
+
+    async function readFile(filePath, type) {
+      switch (type) {
+        case "text": return (await fetch(filePath)).text();
+        case "json": return (await fetch(filePath)).json();
+        case "lambdas-js": return eval(await (await fetch(filePath + ".js")).text());
+        default: throw new Error("Unknown type");
+      }
+    }
+
+    async function exec(folderName, inputTypes, inputSubTemplateKey) {
+      const types = inputTypes ??  ["text", "json", "text"];
+      const template = await readFile(`${folderName}/template.mustache`, types[0]);
+      const data = await readFile(`${folderName}/data`, types[1]);
+      const subTemplate = inputSubTemplateKey ? await readFile(`${folderName}/sub_template.mustache`, types[2]) : null;
+
+      console.log("----------------------------------------\n");
+      console.log(`[${folderName}]`);
+      if (inputSubTemplateKey) {
+        const result = Mustache.render(template, data, { [inputSubTemplateKey]: subTemplate });
+        console.log(result);
+        return result;
+      } else {
+        const result = Mustache.render(template, data);
+        console.log(result);
+        return result;
+      }
+    }
+
+    const sampleInfoArray = [
+      { folderName: "synopsis" },
+      { folderName: "tags" },
+      { folderName: "implicitIterator", types: ["text", "text"] },
+      { folderName: "lambdas", types: ["text", "lambdas-js"] },
+      { folderName: "sectionsFalseValuesOrEmptyLists" },
+      { folderName: "sectionsNonEmptyLists" },
+      { folderName: "sectionsNonFalseValues" },
+      { folderName: "sectionsInvertedSections" },
+      { folderName: "sectionsComments" },
+      { folderName: "sectionsPartials", subTemplateKey: "user" },
+      // { folderName: "sectionDynamicNames", subTemplateKey: "dynamic" }, // TODO: not working!
+    ]
+
+    for (let i = 0; i < sampleInfoArray.length; i++) {
+      const sampleInfo = sampleInfoArray[i];
+      const result = await exec(sampleInfo.folderName, sampleInfo.types, sampleInfo.subTemplateKey);
+      document.body.innerHTML += `[${sampleInfo.folderName}]<br /><br />`;
+      document.body.innerHTML += result.replaceAll("\n", "<br />");
+      document.body.innerHTML += "<br /><hr /><br />";
+    }
+  </script>
+
+</body>
+
+</html>
